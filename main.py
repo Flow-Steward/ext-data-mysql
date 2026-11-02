@@ -73,7 +73,7 @@ TOOLBOX_ENV_FIELDS = {
         "MYSQL_QUERY_PARAMS": "query_params",
     },
 }
-TOOLBOX_RUNTIME_PREBUILT_ALIASES = {"mariadb": "mysql"}
+TOOLBOX_RUNTIME_PREBUILT_ALIASES: dict[str, str] = {"mariadb": "mysql"}
 
 
 def _connector_type_id(prebuilt: str) -> str:
