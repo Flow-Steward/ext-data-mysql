@@ -172,7 +172,27 @@ runtime:
           password:
             type: string
             title: Password
+            minLength: 1
+            description: Password is required for mysql, mariadb. Supply password
+              or the matching profile-specific secret env variable. Managed PostgreSQL/MySQL/AlloyDB
+              IAM profiles keep password optional; public config env is not a credential
+              source.
+          env:
+            type: object
+            title: Profile-specific secret environment
+            additionalProperties: false
+            properties:
+              CLOUD_SQL_MYSQL_PASSWORD:
+                type: string
+                minLength: 1
+              MYSQL_PASSWORD:
+                type: string
+                minLength: 1
         title: MySQL & MariaDB password
+        description: Password is required for mysql, mariadb. Supply password or the
+          matching profile-specific secret env variable. Managed PostgreSQL/MySQL/AlloyDB
+          IAM profiles keep password optional; public config env is not a credential
+          source.
       capabilities:
         write_queries: true
       safety_profile:
@@ -327,7 +347,26 @@ runtime:
           password:
             type: string
             title: Password
-            description: Database password for networked Toolbox prebuilts.
+            minLength: 1
+            description: Password is required for mysql, mariadb. Supply password
+              or the matching profile-specific secret env variable. Managed PostgreSQL/MySQL/AlloyDB
+              IAM profiles keep password optional; public config env is not a credential
+              source.
+          env:
+            type: object
+            title: Profile-specific secret environment
+            additionalProperties: false
+            properties:
+              CLOUD_SQL_MYSQL_PASSWORD:
+                type: string
+                minLength: 1
+              MYSQL_PASSWORD:
+                type: string
+                minLength: 1
+        description: Password is required for mysql, mariadb. Supply password or the
+          matching profile-specific secret env variable. Managed PostgreSQL/MySQL/AlloyDB
+          IAM profiles keep password optional; public config env is not a credential
+          source.
       capabilities:
         read_only: true
         test_connection: true
