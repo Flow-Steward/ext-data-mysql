@@ -1,0 +1,8 @@
+{
+  "prebuilts": [
+    "mysql",
+    "mariadb",
+    "cloud-sql-mysql"
+  ],
+  "display_name": "MySQL & MariaDB"
+}

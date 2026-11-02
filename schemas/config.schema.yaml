@@ -1,0 +1,104 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: MySQL & MariaDB connection
+type: object
+additionalProperties: false
+required:
+- prebuilt
+properties:
+  prebuilt:
+    type: string
+    enum:
+    - mysql
+    - mariadb
+    - cloud-sql-mysql
+    description: Select a MySQL & MariaDB connection profile.
+    title: Connection profile
+  database:
+    type: string
+    description: Database name for the selected external source.
+  host:
+    type: string
+    description: Database host for networked Toolbox prebuilts.
+  port:
+    type: string
+    description: Database port for networked Toolbox prebuilts.
+  user:
+    type: string
+    description: Database user for networked Toolbox prebuilts.
+  query_params:
+    type: string
+    description: Optional PostgreSQL query params passed to Toolbox.
+  project:
+    type: string
+    description: Cloud project for managed Google Cloud sources.
+  region:
+    type: string
+    description: Cloud region for managed Google Cloud sources.
+  instance:
+    type: string
+    description: Instance identifier for managed database sources.
+  ip_type:
+    type: string
+    description: Public or private IP mode for managed database sources.
+  env:
+    type: object
+    title: Profile environment overrides
+    additionalProperties: false
+    properties:
+      CLOUD_SQL_MYSQL_PROJECT:
+        type: string
+      CLOUD_SQL_MYSQL_REGION:
+        type: string
+      CLOUD_SQL_MYSQL_INSTANCE:
+        type: string
+      CLOUD_SQL_MYSQL_DATABASE:
+        type: string
+      CLOUD_SQL_MYSQL_USER:
+        type: string
+      CLOUD_SQL_MYSQL_IP_TYPE:
+        type: string
+      MYSQL_HOST:
+        type: string
+      MYSQL_PORT:
+        type: string
+      MYSQL_DATABASE:
+        type: string
+      MYSQL_USER:
+        type: string
+      MYSQL_QUERY_PARAMS:
+        type: string
+allOf:
+- if:
+    properties:
+      prebuilt:
+        const: mysql
+    required:
+    - prebuilt
+  then:
+    required:
+    - database
+    - host
+    - user
+- if:
+    properties:
+      prebuilt:
+        const: mariadb
+    required:
+    - prebuilt
+  then:
+    required:
+    - database
+    - host
+    - user
+- if:
+    properties:
+      prebuilt:
+        const: cloud-sql-mysql
+    required:
+    - prebuilt
+  then:
+    required:
+    - database
+    - project
+    - region
+    - instance

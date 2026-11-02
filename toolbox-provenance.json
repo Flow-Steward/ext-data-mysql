@@ -1,0 +1,23 @@
+{
+  "binaries": {
+    "linux-amd64": {
+      "path": "bin/linux-amd64/toolbox",
+      "sha256": "17954cb49568da3bb246abb9bed35a12c2486419b60f1b0bb28bd9b3707379bc",
+      "size": 28758142
+    },
+    "linux-arm64": {
+      "path": "bin/linux-arm64/toolbox",
+      "sha256": "7a3758a10492cd5f021f422eca6ded2decb6188bde5af189d05f9b91eb34bea5",
+      "size": 26869886
+    }
+  },
+  "go_image": "golang:1.26.2-bookworm@sha256:47ce5636e9936b2c5cbf708925578ef386b4f8872aec74a67bd13a627d242b19",
+  "patch_sha256": "44ea573fdf39a15a5011b76b8d8a568d8c631d6ec3ad44078607af55d5e34c58",
+  "registered_prebuilts": [
+    "cloud-sql-mysql",
+    "mysql"
+  ],
+  "source": "https://github.com/googleapis/mcp-toolbox",
+  "upstream_commit": "b0010060a939455d91e4f8ba62dc3e72b1892469",
+  "upstream_tag": "v1.3.0"
+}

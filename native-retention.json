@@ -1,0 +1,14 @@
+{
+  "source_family_commit": "b83a6d0c1a91ee55c579d97ab12a1d0f8d5ed92d",
+  "retained_without_rebuild": true,
+  "binaries": {
+    "linux-amd64": {
+      "sha256": "17954cb49568da3bb246abb9bed35a12c2486419b60f1b0bb28bd9b3707379bc",
+      "bytes": 28758142
+    },
+    "linux-arm64": {
+      "sha256": "7a3758a10492cd5f021f422eca6ded2decb6188bde5af189d05f9b91eb34bea5",
+      "bytes": 26869886
+    }
+  }
+}
