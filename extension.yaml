@@ -4,11 +4,15 @@ lifecycle:
   data_migrations: []
 extension_id: flowsteward.data-connector-mcp-toolbox-mysql
 kind: tool_provider
-version: 1.3.4
+version: 1.3.5
 release_stage: active
 display_name: MySQL & MariaDB
-description: MySQL & MariaDB dataset reads and parameterized workflow INSERT, UPDATE
-  and DELETE.
+description: |-
+  Connect MySQL and MariaDB data to Flow Steward through direct MySQL, MariaDB or Cloud SQL for MySQL profiles. Read-only Datasets support testing the connection, inspecting table schemas, validating saved SQL against selected tables and columns, previewing results, executing saved queries and inferring output schemas. Use application lookups, reporting extracts and reusable queries to supply data to later workflow steps.
+
+  A separate workflow action executes one INSERT, UPDATE or DELETE with named parameters and an optional parameter schema. Use it to save workflow results or change application records while keeping Dataset queries read-only. Parameter values are supplied separately from the SQL statement, allowing the same query or write to be reused with different workflow inputs.
+
+  Direct MySQL and MariaDB connections need a host, database, user and password. The Cloud SQL profile uses project, region, instance and database settings with the appropriate Google Cloud access and authentication configuration. Read output is limited to 100 rows and 480 KiB. SQL support is a restricted subset; schema-changing statements, transaction scripts and database triggers are outside the connector's operation set.
 vendor:
   name: Flow Steward
   support_url: https://github.com/Flow-Steward/ext-data-mysql/issues
@@ -20,10 +24,16 @@ listing:
   - database
   - sql
   - dataset
-  summary: MySQL & MariaDB dataset reads and parameterized workflow INSERT, UPDATE
-    and DELETE.
-  description: Connect MySQL & MariaDB datasets, inspect schemas, preview saved queries,
-    and run bounded workflow writes.
+  summary: |-
+    Query MySQL, MariaDB or Cloud SQL for MySQL Datasets and run parameterized INSERT, UPDATE or DELETE actions.
+  description: |-
+    Connect MySQL and MariaDB data to Flow Steward through direct MySQL, MariaDB or Cloud SQL for MySQL profiles. Read-only Datasets support testing the connection, inspecting table schemas, validating saved SQL against selected tables and columns, previewing results, executing saved queries and inferring output schemas. Use application lookups, reporting extracts and reusable queries to supply data to later workflow steps.
+
+    A separate workflow action executes one INSERT, UPDATE or DELETE with named parameters and an optional parameter schema. Use it to save workflow results or change application records while keeping Dataset queries read-only. Parameter values are supplied separately from the SQL statement, allowing the same query or write to be reused with different workflow inputs.
+
+    Direct MySQL and MariaDB connections need a host, database, user and password. The Cloud SQL profile uses project, region, instance and database settings with the appropriate Google Cloud access and authentication configuration. Read output is limited to 100 rows and 480 KiB. SQL support is a restricted subset; schema-changing statements, transaction scripts and database triggers are outside the connector's operation set.
+  setup_summary: |-
+    Choose MySQL, MariaDB or Cloud SQL for MySQL and configure its direct endpoint or cloud instance settings. Store direct-database passwords in secrets; Cloud SQL requires the runtime’s appropriate Google Cloud credentials and instance/database access.
 package:
   format: flow-steward-extension
   license: Apache-2.0
