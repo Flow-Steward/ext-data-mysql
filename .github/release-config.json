@@ -19,29 +19,9 @@
     "tests/test_standalone_database.py",
     "tests/test_toolbox_dataset_connector.py",
     "tests/test_vendored_wheels.py",
-    "tests/test_write_sql_guards.py"
+    "tests/test_write_sql_guards.py",
+    "tests/test_native_build_contract.py"
   ],
   "additional_assets": [],
-  "payload_sources": [
-    {
-      "target": "linux-amd64",
-      "url": "https://github.com/Flow-Steward/ext-data-mysql/releases/download/v1.3.4/flowsteward.data-connector-mcp-toolbox-mysql-1.3.4-linux-amd64.zip",
-      "bytes": 11737341,
-      "sha256": "c4942082c875ba8eba0238488d8915a90882f04496f37dbfadf4260660018634",
-      "restore_paths": [
-        "bin/linux-amd64/toolbox",
-        "packages.txt"
-      ]
-    },
-    {
-      "target": "linux-arm64",
-      "url": "https://github.com/Flow-Steward/ext-data-mysql/releases/download/v1.3.4/flowsteward.data-connector-mcp-toolbox-mysql-1.3.4-linux-arm64.zip",
-      "bytes": 10620060,
-      "sha256": "d885dc24d7cd9ed1186d2f16c49e0f3f0eaa0e9849098db4ebdca7654a8c047e",
-      "restore_paths": [
-        "bin/linux-arm64/toolbox",
-        "packages.txt"
-      ]
-    }
-  ]
+  "payload_sources": []
 }
