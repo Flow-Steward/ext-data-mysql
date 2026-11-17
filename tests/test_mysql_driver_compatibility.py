@@ -32,7 +32,7 @@ def startup(tmp_path, target, port, **options):
     return subprocess.run(
         [
             str(ROOT / "bin" / target / "toolbox"),
-            "--tools-file",
+            "--config",
             str(config),
             "--stdio",
             "--disable-version-check",
@@ -89,3 +89,40 @@ def test_mysql_rejects_unsafe_interpolation_charset_before_dial(tmp_path, target
     diagnostic = result.stdout + result.stderr
     assert result.returncode != 0, diagnostic
     assert "interpolateParams cannot be used with unsafe charsets" in diagnostic, diagnostic
+
+
+@pytest.mark.packaged
+@pytest.mark.skipif(platform.system() != "Linux", reason="Linux native payloads")
+@pytest.mark.parametrize("target", TARGETS)
+@pytest.mark.parametrize(
+    "charset,collation", [("utf8mb4", "utf8mb4_unicode_ci"), ("gb2312", "gb2312_bin")]
+)
+def test_mysql_safe_interpolation_charset_reaches_the_handshake(
+    tmp_path, target, charset, collation
+):
+    if DATABASE != "mysql":
+        pytest.skip("only the MySQL adapter accepts queryParams")
+    binary = ROOT / "bin" / target / "toolbox"
+    if (ROOT / ".fs-package.yaml").exists() and not binary.exists():
+        pytest.skip("other architecture is excluded from this package")
+    with socket.socket() as server, ThreadPoolExecutor(max_workers=1) as executor:
+        server.bind(("127.0.0.1", 0))
+        server.listen(1)
+        server.settimeout(15)
+        sent = executor.submit(truncated_greeting, server, b"\x0a\x00")
+        result = startup(
+            tmp_path,
+            target,
+            server.getsockname()[1],
+            queryParams={
+                "interpolateParams": "true",
+                "charset": charset,
+                "collation": collation,
+            },
+        )
+        sent.result(timeout=15)
+    diagnostic = result.stdout + result.stderr
+    assert result.returncode != 0, diagnostic
+    assert "malformed packet" in diagnostic.lower(), diagnostic
+    assert "unsafe charsets" not in diagnostic, diagnostic
+    assert "panic:" not in diagnostic.lower(), diagnostic

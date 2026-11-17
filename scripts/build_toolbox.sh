@@ -92,7 +92,10 @@ docker run --rm --cpus=2 --memory=4g \
     echo "[PASS] $VARIANT: $(wc -l < /tmp/types) types from $(wc -l < /tmp/packages) packages for: $PREBUILTS"
     cp /tmp/packages "/out/packages.txt"
 
-    go test -mod=readonly -p 1 ./internal/util/flowstewardbinding ./internal/tools/mysql/mysqlexecutesql ./internal/sources/mysql
+    # Exercise upstream protocol/config regressions without a live database.
+    go test -mod=readonly -p 1 -count=1 -timeout=60s -v github.com/go-sql-driver/mysql -run "^(TestReadHandshakePacketTruncated|TestConnectorTruncatedHandshake|TestDSNUnsafeCharset|TestDSNUnsafeCollation|TestConnectorBeforeConnectUnsafeCharset|TestBeforeConnectUsesEffectiveTimeout|TestBeforeConnectUsesEffectiveDialerAndAttributes|TestInterpolateParamsWithComments|TestReadColumnsCollation|TestHandshakeCollation|TestWriteExecutePacketValidatesArgsBeforeWriting|TestWriteExecutePacketValidatesSizeBeforeWriting|TestWriteExecutePacketResetsStmtAfterLongDataError|TestInfileFailureClosesConnection|TestInfileWriteFailureNotRetryable)$"
+
+    go test -mod=readonly -p 1 ./internal/util/flowstewardbinding ./internal/tools/mysql/mysqlcommon ./internal/tools/mysql/mysqlexecutesql ./internal/sources/mysql
     export SOURCE_DATE_EPOCH=1779400183
     for target in linux-amd64 linux-arm64; do
       arch=${target#linux-}
