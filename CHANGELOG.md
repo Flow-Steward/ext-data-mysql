@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.13
+
+- Strengthen saved Dataset query validation against selected tables and columns. Schema discovery now lists tables in the configured database.
+
 ## 1.3.12
 
 - Rebuild Linux AMD64 and ARM64 native payloads with github.com/go-sql-driver/mysql v1.10.2 to include its handshake, interpolation and connection cleanup fixes.

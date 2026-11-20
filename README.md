@@ -20,6 +20,8 @@ Build: `scripts/build_toolbox.sh`. Package: `python3 scripts/package_extension.p
 
 Credential validation: Password is required for mysql, mariadb. Supply password or the matching profile-specific secret env variable. Managed PostgreSQL/MySQL/AlloyDB IAM profiles keep password optional; public config env is not a credential source. Required profiles reject missing/blank secrets before provider dispatch, including workflow test mode. The secret environment alternative belongs in project secrets, for example `env: {PROFILE_PASSWORD: ...}` using the exact variable from the selected pinned profile. Wrong-profile environment keys do not satisfy the requirement.
 
+Saved Dataset reads support a single SELECT over named tables, with column expressions, filters, explicit joins, grouping and ordering. Use the exact spelling recorded by introspection and backticks for quoted identifiers. Give output aliases with AS. Use base columns or expressions in GROUP BY and HAVING. ORDER BY also supports standalone output aliases and output positions. Rework saved reads that use nested queries, set operations, implicit join columns or dialect-specific syntax outside this subset. Discovery lists the configured database. If a saved dataset has an ambiguous table identity, refresh the connection schema and select the table again. Use a connection configured for that database when selecting a table from another database.
+
 ## Automated CI and releases
 
 Pushes to `main` and pull requests run the shared extension build workflow. The checked-in `.github/release-config.json` selects both Linux targets, the repository's package script and test inputs. Missing native payloads and published-only inventory are restored from checksum-pinned release archives; tracked source files are preserved. The source packager retains its provenance checks.
@@ -27,14 +29,14 @@ Pushes to `main` and pull requests run the shared extension build workflow. The 
 After the versioned release commit is on `main`, publish by pushing its version tag:
 
 ```sh
-git tag v1.3.12
-git push origin v1.3.12
+git tag v1.3.13
+git push origin v1.3.13
 ```
 
 The release workflow runs the shared checks, builds the target archives and publishes the GitHub release and checksums. Do not move an existing tag. To rerun a release for an existing tag, dispatch the same workflow:
 
 ```sh
-gh workflow run release.yml --repo Flow-Steward/ext-data-mysql --ref main -f tag=v1.3.12
+gh workflow run release.yml --repo Flow-Steward/ext-data-mysql --ref main -f tag=v1.3.13
 ```
 
 The manifest, descriptor (when present), package version and tag must identify the same release. Release publication uses the workflow token; no additional repository secret is required by these callers.

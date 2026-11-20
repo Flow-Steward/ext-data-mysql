@@ -189,3 +189,145 @@ def test_generated_numbered_placeholders_and_unicode_dollar_values_remain_valid(
         bound = module._compile_bound_query(prebuilt, "SELECT :value AS value", {"value": value})
         assert json.loads(bound["params_json"]) == {"value": value}
         assert value not in bound["sql"]
+
+
+def test_dataset_grants_preserve_spelling_and_do_not_make_short_names(guarded_runtime):
+    request = {
+        "action": {
+            "input": {
+                "dataset": {
+                    "resource_scope_jsonb": {
+                        "resources": [
+                            {"resource_id": "Audit.Events", "columns": ["EventID"]},
+                            {"resource_id": "Events", "columns": ["summary"]},
+                            {"resource_id": "events", "columns": ["kind"]},
+                        ],
+                    },
+                },
+            },
+        },
+    }
+
+    assert guarded_runtime._dataset_scope(request) == {
+        "Audit.Events": {"EventID"},
+        "Events": {"summary"},
+        "events": {"kind"},
+    }
+
+
+def test_scope_tracks_qualified_columns_and_ignores_output_labels(guarded_runtime):
+    guarded_runtime._validate_query_scope(
+        "SELECT e.event_id AS label, upper(e.summary) AS display_summary "
+        "FROM Events AS e WHERE e.event_id = :event_id ORDER BY e.event_id LIMIT 2",
+        {"Events": {"event_id", "summary"}},
+    )
+
+
+def test_scope_binds_qualified_table_to_the_exact_active_database(guarded_runtime):
+    guarded_runtime._validate_query_scope(
+        "SELECT Events.event_id FROM Reporting.Events LIMIT 2",
+        {"Events": {"event_id"}},
+        database="Reporting",
+    )
+
+
+def test_scope_accepts_quoted_identifiers_and_keeps_periods_inside_names(guarded_runtime):
+    guarded_runtime._validate_query_scope(
+        "SELECT e.`order` FROM `Events.Archive` e LIMIT 2",
+        {"Events.Archive": {"order"}},
+    )
+
+
+def test_scope_preserves_ordinary_join_and_aggregate_queries(guarded_runtime):
+    guarded_runtime._validate_query_scope(
+        "SELECT o.customer_id, COUNT(*) AS order_count FROM Orders o "
+        "JOIN Customers c ON o.customer_id = c.customer_id "
+        "WHERE o.active = true GROUP BY o.customer_id ORDER BY o.customer_id LIMIT 10",
+        {"Orders": {"customer_id", "active"}, "Customers": {"customer_id"}},
+    )
+
+
+def test_dataset_introspection_uses_selected_database(guarded_runtime, monkeypatch):
+    prebuilt = "mysql" if "mysql" in guarded_runtime.TOOLBOX_DATASET_PREBUILTS else "oceanbase"
+    monkeypatch.setattr(
+        guarded_runtime,
+        "_invoke_toolbox",
+        lambda *args, **kwargs: [
+            {"schema_name": "Reporting", "object_name": "Events"},
+            {"schema_name": "Archive", "object_name": "Events"},
+        ],
+    )
+    request = {
+        "action": {"input": {"connection_config": {"prebuilt": prebuilt, "database": "Reporting"}}},
+    }
+
+    snapshot = guarded_runtime._introspect(request)
+
+    assert [
+        (row["resource_id"], row["metadata"]["toolbox_schema_name"])
+        for row in snapshot["resources"]
+    ] == [("Events", "Reporting")]
+
+
+def test_dataset_read_preserves_bound_sql_for_the_saved_resource(guarded_runtime, monkeypatch):
+    prebuilt = "mysql" if "mysql" in guarded_runtime.TOOLBOX_DATASET_PREBUILTS else "oceanbase"
+    calls = []
+
+    def provider(_config, _secrets, _operation, query, **_kwargs):
+        calls.append(query)
+        return [{"event_id": 5}]
+
+    monkeypatch.setattr(guarded_runtime, "_invoke_toolbox", provider)
+    request = {
+        "action": {
+            "input": {
+                "connection_config": {"prebuilt": prebuilt, "database": "Reporting"},
+                "dataset": {
+                    "resource_scope_jsonb": {
+                        "resources": [{"resource_id": "Events", "columns": ["event_id"]}],
+                    },
+                    "schema_snapshot_jsonb": {
+                        "resources": [
+                            {
+                                "resource_id": "Events",
+                                "metadata": {"toolbox_schema_name": "Reporting"},
+                            }
+                        ],
+                    },
+                },
+                "query_template": {
+                    "query_definition_jsonb": {
+                        "sql": "SELECT CAST(event_id AS SIGNED) AS display_id FROM Events "
+                        "WHERE event_id = :id ORDER BY display_id"
+                    },
+                    "param_schema_jsonb": {"properties": {"id": {"type": "integer"}}},
+                },
+                "params": {"id": 5},
+            },
+        },
+    }
+
+    assert guarded_runtime._execute_sql(request, preview=True)["rows"] == [{"event_id": 5}]
+    assert calls[0]["sql"] == (
+        "SELECT CAST(event_id AS SIGNED) AS display_id FROM Events "
+        "WHERE event_id = ? ORDER BY 1 LIMIT 10"
+    )
+    assert calls[0]["param_order"] == ["id"]
+
+
+def test_legacy_scope_keeps_duplicate_table_identity_ambiguous(guarded_runtime):
+    dataset = {
+        "schema_snapshot_jsonb": {
+            "resources": [
+                {"resource_id": "Events", "metadata": {"toolbox_schema_name": "Reporting"}},
+                {"resource_id": "Events", "metadata": {"toolbox_schema_name": "Archive"}},
+                {"resource_id": "Customers", "metadata": {"toolbox_schema_name": "Reporting"}},
+            ],
+        },
+    }
+    request = {"action": {"input": {"dataset": dataset}}}
+
+    assert guarded_runtime._dataset_resource_databases(request) == {
+        "Events": None,
+        "Customers": "Reporting",
+    }
