@@ -1042,8 +1042,9 @@ def test_checksum_verifier_requires_both_binaries_for_source_bundle(tmp_path) ->
 
 def test_checksum_verifier_accepts_one_binary_target_archive(tmp_path) -> None:
     relative = "bin/linux-amd64/toolbox"
-    checksum = _write_test_elf(tmp_path / relative, machine=62)
-    (tmp_path / ".fs-package.yaml").write_text(
+    root = tmp_path / "extension"
+    checksum = _write_test_elf(root / relative, machine=62)
+    (root / ".fs-package.yaml").write_text(
         "runtime_target: linux-amd64\n",
         encoding="utf-8",
     )
@@ -1063,7 +1064,9 @@ def test_checksum_verifier_accepts_one_binary_target_archive(tmp_path) -> None:
             sys.executable,
             str(EXTENSION_ROOT / "scripts" / "verify_toolbox_artifacts.py"),
             "--root",
-            str(tmp_path),
+            str(root),
+            "--checksums",
+            str(tmp_path / "SHA256SUMS"),
         ],
         text=True,
         capture_output=True,
@@ -1077,8 +1080,9 @@ def test_checksum_verifier_accepts_one_binary_target_archive(tmp_path) -> None:
 
 def test_checksum_verifier_rejects_target_binary_checksum_mismatch(tmp_path) -> None:
     relative = "bin/linux-amd64/toolbox"
-    _write_test_elf(tmp_path / relative, machine=62)
-    (tmp_path / ".fs-package.yaml").write_text(
+    root = tmp_path / "extension"
+    _write_test_elf(root / relative, machine=62)
+    (root / ".fs-package.yaml").write_text(
         "runtime_target: linux-amd64\n",
         encoding="utf-8",
     )
@@ -1092,7 +1096,9 @@ def test_checksum_verifier_rejects_target_binary_checksum_mismatch(tmp_path) -> 
             sys.executable,
             str(EXTENSION_ROOT / "scripts" / "verify_toolbox_artifacts.py"),
             "--root",
-            str(tmp_path),
+            str(root),
+            "--checksums",
+            str(tmp_path / "SHA256SUMS"),
         ],
         text=True,
         capture_output=True,

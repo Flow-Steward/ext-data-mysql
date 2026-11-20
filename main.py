@@ -333,7 +333,7 @@ def _invoke_toolbox(
                 "params": {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {},
-                    "clientInfo": {"name": EXTENSION_ID, "version": "1.3.13"},
+                    "clientInfo": {"name": EXTENSION_ID, "version": "1.3.14"},
                 },
             },
         )
@@ -723,6 +723,8 @@ _READ_ONLY_FORBIDDEN_TOKENS = frozenset(
         "vacuum",
     }
 )
+# Only native functions shared by the supported MySQL and MariaDB profiles.
+# An unqualified name absent from the native registry can resolve to a stored routine.
 _READ_ONLY_FUNCTIONS = frozenset(
     {
         "abs",
@@ -733,7 +735,6 @@ _READ_ONLY_FUNCTIONS = frozenset(
         "coalesce",
         "concat",
         "count",
-        "date_trunc",
         "extract",
         "floor",
         "greatest",
@@ -745,7 +746,6 @@ _READ_ONLY_FUNCTIONS = frozenset(
         "min",
         "nullif",
         "round",
-        "row_number",
         "rtrim",
         "substring",
         "sum",

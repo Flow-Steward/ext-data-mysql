@@ -95,34 +95,28 @@ def test_replacement_cannot_bypass_original_dependency_floor(tmp_path, path, ver
 
 
 @pytest.mark.parametrize("target", ["linux-amd64", "linux-arm64"])
-def test_packager_rejects_hash_consistent_old_payload(tmp_path, target):
+def test_packager_rejects_hash_consistent_old_payload(tmp_path, target, monkeypatch):
     # Use a real archived payload when running the regression against a chosen root.
     import os
     import shutil
 
+    from test_native_build_contract import commit_fixture_source, load_script, native_fixture
+
     old_root = os.environ.get("FS_OLD_NATIVE_ROOT")
     if not old_root:
         pytest.skip("requires a verified previous release's native payload")
-    old_binary = Path(old_root) / "bin" / target / "toolbox"
-    fixture = tmp_path / "extension"
-    shutil.copytree(
-        ROOT, fixture, ignore=shutil.ignore_patterns(".git", "bin", "dist", "__pycache__")
-    )
+    fixture = native_fixture(tmp_path, monkeypatch)
+    commit_fixture_source(fixture)
     binary = fixture / "bin" / target / "toolbox"
-    binary.parent.mkdir(parents=True)
-    shutil.copy2(old_binary, binary)
+    shutil.copy2(Path(old_root) / "bin" / target / "toolbox", binary)
     record = native_security.inspect_binary(binary)
     record["path"] = f"bin/{target}/toolbox"
     provenance = json.loads((fixture / "toolbox-provenance.json").read_text())
     provenance["binaries"][target] = record
     (fixture / "toolbox-provenance.json").write_text(json.dumps(provenance))
-    package_spec = importlib.util.spec_from_file_location(
-        "package_extension", fixture / "scripts/package_extension.py"
-    )
-    package = importlib.util.module_from_spec(package_spec)
-    package_spec.loader.exec_module(package)
-    with pytest.raises(ValueError, match="reviewed compiler"):
-        package.package_extension(fixture, target, tmp_path / "out")
+
+    with pytest.raises(ValueError, match="reviewed native manifest"):
+        load_script("package_extension").package_extension(fixture, target, tmp_path / "out")
 
 
 def test_previous_mysql_driver_is_below_the_reviewed_floor():

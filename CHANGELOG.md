@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.14
+
+- Validate Dataset functions against the supported MySQL and MariaDB dialects.
+- Bind release packages to the reviewed source and native artifact identities, and bound verifier input reads.
+
 ## 1.3.13
 
 - Strengthen saved Dataset query validation against selected tables and columns. Schema discovery now lists tables in the configured database.

@@ -40,7 +40,6 @@ if test -n "$TOOLBOX_SOURCE_DIR"; then
 fi
 
 docker run --rm --cpus=2 --memory=4g \
-  -v flow-steward-db-batch-go-cache:/go/pkg/mod -v flow-steward-db-batch-build-cache:/root/.cache/go-build \
   -e TOOLBOX_TAG="$TOOLBOX_TAG" -e TOOLBOX_COMMIT="$TOOLBOX_COMMIT" -e PATCH="$PATCH" \
   -e PROFILE_PATCH="$PROFILE_PATCH" -e SECURITY_PATCH="$SECURITY_PATCH" -e GOTOOLCHAIN=local -e GOFLAGS=-mod=readonly \
   -e PREBUILTS="$PREBUILTS" -e VARIANT="$VARIANT" \
@@ -106,6 +105,7 @@ docker run --rm --cpus=2 --memory=4g \
       chmod 0755 "/out/bin/$target/toolbox"
       echo "[PASS] $VARIANT $target: $(stat -c %s "/out/bin/$target/toolbox") bytes"
     done
+    go mod verify
     sha256sum -c /tmp/locked-modules.sha256
     chown -R "$HOST_UID:$HOST_GID" "/out/bin" "/out/packages.txt" "/out/scripts/go-toolchain-selected.json"
   '

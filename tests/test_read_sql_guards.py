@@ -331,3 +331,20 @@ def test_legacy_scope_keeps_duplicate_table_identity_ambiguous(guarded_runtime):
         "Events": None,
         "Customers": "Reporting",
     }
+
+
+def test_dataset_functions_are_native_to_both_supported_dialects(guarded_runtime):
+    functions = guarded_runtime._READ_ONLY_FUNCTIONS
+
+    assert {"count", "lower", "upper", "cast", "extract"} <= functions
+    assert "date_trunc" not in functions
+    assert "row_number" not in functions
+
+
+def test_schema_scope_reserves_stateful_sequence_pseudocolumns(guarded_runtime):
+    from read_sql import is_sequence_pseudocolumn
+
+    assert is_sequence_pseudocolumn(("sequence_name", "NEXTVAL"))
+    assert is_sequence_pseudocolumn(("reporting", "sequence_name", "CURRVAL"))
+    assert not is_sequence_pseudocolumn(("sequence_name", "event_id"))
+    assert not is_sequence_pseudocolumn(("nextval",))

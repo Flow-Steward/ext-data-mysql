@@ -123,11 +123,14 @@ def _modules(content, gaps, source, replacements=None):
 
 
 def inspect_binary(path: Path) -> dict:
-    blob = path.read_bytes()
+    return inspect_binary_bytes(path.read_bytes(), source=str(path))
+
+
+def inspect_binary_bytes(blob: bytes, *, source: str) -> dict:
     toolchain, text = _buildinfo(blob)
     gaps: list[str] = []
     replacements: dict[str, dict[str, str]] = {}
-    modules = dict(_modules(text, gaps, str(path), replacements))
+    modules = dict(_modules(text, gaps, source, replacements))
     return {
         "go_version": toolchain,
         "modules": modules,

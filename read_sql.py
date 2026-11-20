@@ -94,6 +94,11 @@ _EXTRACT_UNITS = frozenset(
 _UNSUPPORTED = "Unsupported dataset SELECT syntax"
 
 
+def is_sequence_pseudocolumn(name: tuple[str, ...]) -> bool:
+    # MariaDB's Oracle mode also recognizes qualified sequence pseudocolumns.
+    return len(name) > 1 and name[-1].casefold() in {"nextval", "currval"}
+
+
 class Token(NamedTuple):
     kind: str
     value: str
@@ -356,6 +361,8 @@ class _SelectParser:
             name += (self._identifier(),)
             if len(name) > 3:
                 raise ValueError(_UNSUPPORTED)
+        if is_sequence_pseudocolumn(name):
+            raise ValueError("Sequence pseudocolumns are not allowed in Dataset reads")
         self.columns.append(Column(name))
         return False
 

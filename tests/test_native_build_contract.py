@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import shutil
 import struct
+import subprocess  # nosec B404
 import zipfile
 
 import pytest
@@ -50,7 +51,7 @@ def native_fixture(tmp_path, monkeypatch):
     shutil.copytree(
         ROOT / "scripts", root / "scripts", ignore=shutil.ignore_patterns("__pycache__")
     )
-    for name in ("LICENSE", "NOTICE", "extension.yaml", "variant.json"):
+    for name in (".gitignore", "LICENSE", "NOTICE", "README.md", "extension.yaml", "variant.json"):
         shutil.copy2(ROOT / name, root / name)
     sources = json.loads((root / "scripts/go-toolchain-sources.json").read_text())
     selected = {"version": sources["version"], "host_arch": "amd64", **sources["archives"]["amd64"]}
@@ -63,6 +64,34 @@ def native_fixture(tmp_path, monkeypatch):
     monkeypatch.setattr(provenance, "ROOT", root)
     provenance.main()
     return root
+
+
+def commit_fixture_source(root):
+    native = tuple(f"bin/{target}/toolbox" for target in ("linux-amd64", "linux-arm64"))
+    digests = {
+        path: hashlib.sha256((root / path).read_bytes()).hexdigest()
+        for path in (*GENERATED, *native)
+    }
+    (root / "scripts/native-artifacts.json").write_text(json.dumps({"files": digests}))
+    git = [
+        "git",
+        "-C",
+        str(root),
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@localhost",
+        "-c",
+        "commit.gpgSign=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+    ]
+    for args in (
+        ["init", "-q", "--template="],
+        ["add", "."],
+        ["commit", "-qm", "Reviewed fixture"],
+    ):
+        subprocess.run([*git, *args], check=True)  # nosec B603
 
 
 def test_native_metadata_is_regenerated_from_actual_binary_bytes(tmp_path, monkeypatch):
@@ -82,6 +111,7 @@ def test_native_metadata_is_regenerated_from_actual_binary_bytes(tmp_path, monke
 
 def test_package_contains_generated_untracked_native_metadata(tmp_path, monkeypatch):
     root = native_fixture(tmp_path, monkeypatch)
+    commit_fixture_source(root)
     package = load_script("package_extension")
     archive = package.package_extension(root, "linux-amd64", tmp_path / "out")
     with zipfile.ZipFile(archive) as payload:
@@ -94,9 +124,51 @@ def test_package_contains_generated_untracked_native_metadata(tmp_path, monkeypa
 @pytest.mark.parametrize("missing", GENERATED)
 def test_package_rejects_missing_generated_metadata(tmp_path, monkeypatch, missing):
     root = native_fixture(tmp_path, monkeypatch)
+    commit_fixture_source(root)
     (root / missing).unlink()
     with pytest.raises((ValueError, FileNotFoundError)):
         load_script("package_extension").package_extension(root, "linux-amd64", tmp_path / "out")
+
+
+def test_release_package_uses_only_the_reviewed_git_tree(tmp_path, monkeypatch):
+    root = native_fixture(tmp_path, monkeypatch)
+    commit_fixture_source(root)
+    admitted = (root / "README.md").read_bytes()
+    (root / "README.md").write_text("Unstaged prose")
+    (root / "notes.txt").write_text("Untracked prose")
+    package = load_script("package_extension")
+
+    artifact = package.package_extension(root, "linux-amd64", tmp_path / "out")
+    package.verify_archive(root, "linux-amd64", artifact)
+    with zipfile.ZipFile(artifact) as bundle:
+        assert bundle.read(f"{package.TOP_FOLDER}/README.md") == admitted
+        assert f"{package.TOP_FOLDER}/notes.txt" not in bundle.namelist()
+
+
+def test_release_package_requires_reviewed_build_metadata(tmp_path, monkeypatch):
+    root = native_fixture(tmp_path, monkeypatch)
+    commit_fixture_source(root)
+    (root / "packages.txt").write_text("Unreviewed build metadata")
+    package = load_script("package_extension")
+
+    with pytest.raises(ValueError, match="reviewed native manifest"):
+        package.package_extension(root, "linux-amd64", tmp_path / "out")
+
+
+def test_independent_publication_checks_the_archived_source_bytes(tmp_path, monkeypatch):
+    root = native_fixture(tmp_path, monkeypatch)
+    commit_fixture_source(root)
+    package = load_script("package_extension")
+    artifact = package.package_extension(root, "linux-amd64", tmp_path / "out")
+    alternate = tmp_path / "changed.zip"
+    member = f"{package.TOP_FOLDER}/README.md"
+
+    with zipfile.ZipFile(artifact) as original, zipfile.ZipFile(alternate, "w") as changed:
+        for entry in original.infolist():
+            data = b"Different ordinary prose" if entry.filename == member else original.read(entry)
+            changed.writestr(entry, data)
+    with pytest.raises(ValueError, match="differs from reviewed input"):
+        package.verify_archive(root, "linux-amd64", alternate)
 
 
 def test_native_ci_cannot_restore_previous_release_binaries():
@@ -114,6 +186,12 @@ def test_native_ci_cannot_restore_previous_release_binaries():
     assert "${FS_TOOLBOX_SOURCE_DIR:-${TOOLBOX_SOURCE:-}}" in build
     assert "https://github.com/googleapis/mcp-toolbox.git" in build
     assert "-mod=readonly" in build
+    assert "go mod verify" in build
+    assert "flow-steward-db-batch-go-cache" not in build
+    release = yaml.safe_load((ROOT / ".github/workflows/release.yml").read_text())
+    publish = release["jobs"]["publish"]
+    assert publish["needs"] == "build"
+    assert any("--verify-archive" in step.get("run", "") for step in publish["steps"])
     assert "/private/tmp/" not in build
     ignored = (ROOT / ".gitignore").read_text().splitlines()
     assert all("/" + name in ignored for name in GENERATED)
@@ -140,3 +218,23 @@ def test_committed_build_identities_match_reviewed_patches_and_module_floors():
         assert build["patched_dependencies"] == baseline["modules"]
     else:
         assert build["security_baseline"] == "scripts/native-security-baseline.json"
+
+
+def test_artifact_reader_rejects_over_limit_before_reading(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    verifier = load_script("verify_toolbox_artifacts")
+    artifact = tmp_path / "artifact"
+    artifact.write_bytes(b"ordinary test content")
+    monkeypatch.setattr(verifier, "MAX_BINARY_BYTES", 8)
+    with pytest.raises(ValueError, match="exceeds"):
+        verifier._read_binary(artifact, 62)
+
+
+def test_artifact_text_reader_limits_metadata(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    verifier = load_script("verify_toolbox_artifacts")
+    metadata = tmp_path / "metadata.json"
+    metadata.write_text("{}")
+    assert verifier._read_text(metadata, 2) == "{}"
+    with pytest.raises(ValueError, match="exceeds"):
+        verifier._read_text(metadata, 1)
