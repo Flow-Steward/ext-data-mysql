@@ -904,7 +904,7 @@ def _validate_query_scope(
     bindings: dict[tuple[str, ...], str] = {}
     for source in query.sources:
         name = source.name[-1]
-        keys = [(source.alias or name,)]
+        keys: list[tuple[str, ...]] = [(source.alias or name,)]
         source_database = source.name[0] if len(source.name) == 2 else database
         if not source.alias and source_database:
             keys.append((source_database, name))

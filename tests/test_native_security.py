@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
     "native_security", ROOT / "scripts/native_security.py"
 )
+assert spec is not None and spec.loader is not None
 native_security = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(native_security)
 

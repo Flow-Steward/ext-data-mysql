@@ -252,7 +252,7 @@ class _SelectParser:
     def _source(self) -> None:
         if self.token.kind not in {"identifier", "quoted"} or self.syntax in _SELECT_BOUNDARIES:
             raise ValueError("Could not confidently identify referenced resources")
-        name = (self._identifier(),)
+        name: tuple[str, ...] = (self._identifier(),)
         if self._take("."):
             name += (self._identifier(),)
         self.sources.append(Source(name, self._alias(implicit=True)))
@@ -342,7 +342,7 @@ class _SelectParser:
         if self.syntax in _SELECT_BOUNDARIES or self.syntax == "select":
             raise ValueError(_UNSUPPORTED)
         first = self.token
-        name = (self._identifier(),)
+        name: tuple[str, ...] = (self._identifier(),)
         if self.syntax == "(":
             if first.kind != "identifier" or first.end != self.token.start:
                 raise ValueError(_UNSUPPORTED)
