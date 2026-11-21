@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.15
+
+- Refresh the locked Go dependency graph and rebuild the Linux AMD64 and ARM64 Toolbox payloads.
+
 ## 1.3.14
 
 - Validate Dataset functions against the supported MySQL and MariaDB dialects.
