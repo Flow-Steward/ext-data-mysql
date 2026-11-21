@@ -1,18 +1,15 @@
 {
   "files": {
-    "SHA256SUMS": "e25f85b4b2e67317db3292edeeb4f6dddb50163fdff3ef16289b7370122e89c2",
-    "bin/linux-amd64/toolbox": "d6745f7ff2cfcdb1379073c3500e513e78279e4a4c8db4209e54ea180f45de58",
-    "bin/linux-arm64/toolbox": "2a0c729004495944fdc02505d0df0974401aa10f6fce266603e923f5a65cb700",
+    "SHA256SUMS": "9a9327b22268fbf24c5e7f06e8f93381e7ce1f8ea0c4c6e075acfeca9ec9ca00",
+    "bin/linux-amd64/toolbox": "4997c226ad3c06c87c527c304d471c58ff3880b1afcc0862469e6f207b64c6e5",
+    "bin/linux-arm64/toolbox": "4e89c378944ecffe320d8d295ca52659c5bb68c85f46d83913f58b1bf9bd8478",
     "packages.txt": "1788a6809e2ae7aa52853c5f121ba56dd137129f7a3668f8802425caa8d1dad4",
     "scripts/go-toolchain-selected.json": "26dc7b7e8bb8992405c8cee8e5245502d60065a28ad102c4f8fe222f829207e2",
-    "toolbox-provenance.json": "0027957721b1570fda8d42a3692aa07d47f4c6fe8c35004bfbca837e0f1bc314"
+    "toolbox-provenance.json": "0b502c1b562de82f80229020569c79c4b7e51ea4dde30f3dfbcfc5e28d84aa7b"
   },
   "source": {
-    "archive_sha256": {
-      "linux-amd64": "64c0c49b10a5f545b7a53ba3a3438b1481916ddb93c6fec13477652c74ba5e67",
-      "linux-arm64": "9cda44f63cece1df51fd249f578da094d5cea6d3da46f8a423d8401dd5adc5de"
-    },
-    "git_commit": "71eb191f2d9187bb6a8676861d0e0d1cf8a9b0e6",
-    "release": "v1.3.13"
+    "git_commit": "f84aefe3ca2d71d9207a58ab902e29147e37cca7",
+    "workflow_run": "https://github.com/Flow-Steward/ext-data-mysql/actions/runs/44896969987",
+    "workflow_artifact_sha256": "42ae0537b92373d91186e7b90451a48634a372ceffa2a5b4bc3a6a64cca4897f"
   }
 }
