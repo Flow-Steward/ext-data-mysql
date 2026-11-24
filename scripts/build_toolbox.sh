@@ -13,8 +13,8 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 test "$#" = 0 || { echo "This build accepts no database selector" >&2; exit 2; }
 VARIANT=mysql
-TOOLBOX_TAG=v1.17.0
-TOOLBOX_COMMIT=45ed205cc8682ed066c82e0b65bcd0e8fc3becce
+TOOLBOX_TAG=v1.18.0
+TOOLBOX_COMMIT=24762d91babd43d91afc3daeeece1cb446266c54
 BOOTSTRAP_IMAGE=golang:1.27.3-bookworm@sha256:dc0963f32053e4bc451d24d87e3892d42d01021b61f093e98eb95c0352bb84b0
 PATCH=scripts/patches/0001-flowsteward-driver-bound-query-params.patch
 SECURITY_PATCH=scripts/patches/0003-flowsteward-security-dependencies.patch
@@ -95,7 +95,7 @@ docker run --rm --cpus=2 --memory=4g \
     go test -mod=readonly -p 1 -count=1 -timeout=60s -v github.com/go-sql-driver/mysql -run "^(TestReadHandshakePacketTruncated|TestConnectorTruncatedHandshake|TestDSNUnsafeCharset|TestDSNUnsafeCollation|TestConnectorBeforeConnectUnsafeCharset|TestBeforeConnectUsesEffectiveTimeout|TestBeforeConnectUsesEffectiveDialerAndAttributes|TestInterpolateParamsWithComments|TestReadColumnsCollation|TestHandshakeCollation|TestWriteExecutePacketValidatesArgsBeforeWriting|TestWriteExecutePacketValidatesSizeBeforeWriting|TestWriteExecutePacketResetsStmtAfterLongDataError|TestInfileFailureClosesConnection|TestInfileWriteFailureNotRetryable)$"
 
     go test -mod=readonly -p 1 ./internal/util/flowstewardbinding ./internal/tools/mysql/mysqlcommon ./internal/tools/mysql/mysqlexecutesql ./internal/sources/mysql
-    export SOURCE_DATE_EPOCH=1779400183
+    export SOURCE_DATE_EPOCH=1795211695
     for target in linux-amd64 linux-arm64; do
       arch=${target#linux-}
       mkdir -p "/out/bin/$target"
