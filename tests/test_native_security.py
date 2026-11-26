@@ -41,6 +41,25 @@ def test_dependency_downgrades_are_rejected(version):
         native_security.check_floors(record, baseline)
 
 
+@pytest.mark.parametrize(
+    ("module", "old", "fixed"),
+    [
+        ("cloud.google.com/go/auth", "v0.24.4", "v0.24.5"),
+        ("github.com/gorilla/websocket", "v1.5.3", "v1.5.4-0.20240701034025-d67f41855da4"),
+        ("google.golang.org/api", "v0.316.0", "v0.317.0"),
+    ],
+)
+def test_previous_release_dependency_is_rejected(module, old, fixed):
+    baseline = json.loads((ROOT / "scripts/native-security-baseline.json").read_text())
+    record = {"go_version": "go1.27.4", "modules": {module: old}, "module_gaps": []}
+
+    with pytest.raises(ValueError, match="module below security floor"):
+        native_security.check_floors(record, baseline)
+
+    record["modules"][module] = fixed
+    native_security.check_floors(record, baseline)
+
+
 def test_local_replacement_cannot_hide_a_dependency():
     record = {"go_version": "go1.27.4", "modules": {}, "module_gaps": ["unversioned replacement"]}
     baseline = json.loads((ROOT / "scripts/native-security-baseline.json").read_text())

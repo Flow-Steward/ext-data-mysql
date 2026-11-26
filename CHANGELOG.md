@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.17 - 2026-11-26
+
+- Rebuild both Linux native payloads with the Gorilla WebSocket fix for GHSA-w67g-5rqw-f597.
+- Update the locked Google Cloud Auth and Google API modules to v0.24.5 and v0.317.0.
+
 ## 1.3.16 - 2026-11-24
 
 - Update the pinned Toolbox source to v1.18.0 and refresh the reviewed Linux AMD64 and ARM64 dependency locks.
